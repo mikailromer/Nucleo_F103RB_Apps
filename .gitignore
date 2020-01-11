@@ -54,3 +54,4 @@ dkms.conf
 #Directories
 .metadata/
 RemoteSystemsTempFiles/
+App01LedControlViaTimers/Debug
