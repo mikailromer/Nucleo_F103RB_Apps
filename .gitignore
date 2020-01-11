@@ -55,3 +55,10 @@ dkms.conf
 .metadata/
 RemoteSystemsTempFiles/
 App01LedControlViaTimers/Debug
+*.launch
+
+#Project configuration files
+*.settings
+*.ld
+
+
