@@ -43,7 +43,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
-TIM_HandleTypeDef tim2;
+TIM_HandleTypeDef tim2, tim3, tim4;
 
 
 /* USER CODE BEGIN PV */
@@ -61,11 +61,37 @@ void TIM2_IRQHandler(void)
 	HAL_TIM_IRQHandler(&tim2);
 }
 
+void TIM3_IRQHandler(void)
+{
+	HAL_TIM_IRQHandler(&tim3);
+}
+
+void TIM4_IRQHandler(void)
+{
+	HAL_TIM_IRQHandler(&tim4);
+}
 
 void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef* htim)
 {
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	if(htim->Instance == TIM2)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	}
+	else if(htim->Instance == TIM3)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	}
+	else if(htim->Instance == TIM4)
+	{
+		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
+	}
 }
+
+//void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef* htim)
+//{
+//	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+//}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -104,8 +130,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  Timer_Config(&tim2);
+  __HAL_RCC_TIM2_CLK_ENABLE();
+  __HAL_RCC_TIM3_CLK_ENABLE();
+  __HAL_RCC_TIM4_CLK_ENABLE();
+  EnableIRQs();
+  Timer_Config(&tim2, TIM2, 999);
+  Timer_Config(&tim3, TIM3, 1999);
+  Timer_Config(&tim4, TIM4, 499);
   Timer_Start(&tim2);
+  Timer_Start(&tim3);
+  Timer_Start(&tim4);
 
   /* USER CODE END 2 */
 
@@ -214,7 +248,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : A5_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -227,6 +261,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Timer_Config(TIM_HandleTypeDef* htim, TIM_TypeDef* TIMER, uint32_t period)
+{
+	htim->Instance = TIMER;
+	htim->Init.Prescaler = 7999;
+	htim->Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim->Init.Period = period;
+	htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	//htim->Init.RepetitionCounter = 0;
+	htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+	HAL_TIM_Base_Init(htim);
+}
+
+void EnableIRQs()
+{
+	HAL_NVIC_EnableIRQ(TIM2_IRQn);
+	HAL_NVIC_EnableIRQ(TIM3_IRQn);
+	HAL_NVIC_EnableIRQ(TIM4_IRQn);
+}
+/*
 void Timer_Config(TIM_HandleTypeDef* tim)
 {
 	__HAL_RCC_TIM2_CLK_ENABLE();
@@ -240,7 +293,7 @@ void Timer_Config(TIM_HandleTypeDef* tim)
 	HAL_TIM_Base_Init(tim);
 	HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
-
+*/
 void Timer_Start(TIM_HandleTypeDef* tim)
 {
 	HAL_TIM_Base_Start_IT(tim);
